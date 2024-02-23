@@ -1,0 +1,28 @@
+import pandas as pd
+import json
+
+# Read the JSON file
+with open('SumTrip.json', 'r') as file:
+    data = json.load(file)
+
+# Extract the data list from the JSON
+data_list = data['data']
+
+# Create a list to store the extracted fields
+fields = []
+
+# Iterate over each truck in the data list
+for truck in data_list:
+    # Extract the truck name, report date, and distance
+    truck_name = truck['truck_name']
+    report_date = truck['data_list'][0]['report_date']
+    distance = truck['data_list'][0]['distance']
+
+    # Append the extracted fields to the fields list
+    fields.append([truck_name, report_date, distance])
+
+# Create a DataFrame from the fields list
+df = pd.DataFrame(fields, columns=['truck_name', 'report_date', 'distance'])
+
+# Print the DataFrame
+print(df)

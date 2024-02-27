@@ -62,14 +62,18 @@ def view():
     else:
       p_date = df_orders['date'][i]
 
-    p_time = (datetime.strptime(df_orders['pickup_time'][i],'%H:%M:%S') + timedelta(minutes=30))
-    p_time = p_time.strftime('%H:%M:%S')
-    d_time = (datetime.strptime(df_orders['delivery_time'][i], '%H:%M:%S') + timedelta(minutes=30))
-    d_time = d_time.strftime('%H:%M:%S')
+    p_time_s = datetime.strptime(df_orders['pickup_time'][i],'%H:%M:%S')
+    p_time_s = p_time_s.strftime("%I:%M:%S %p")           
+    p_time_e = (datetime.strptime(df_orders['pickup_time'][i],'%H:%M:%S') + timedelta(minutes=30))
+    p_time_e = p_time_e.strftime("%I:%M:%S %p")
+    d_time_s = datetime.strptime(df_orders['delivery_time'][i], '%H:%M:%S')
+    d_time_s = d_time_s.strftime("%I:%M:%S %p")
+    d_time_e = (datetime.strptime(df_orders['delivery_time'][i], '%H:%M:%S') + timedelta(minutes=30))
+    d_time_e = d_time_e.strftime("%I:%M:%S %p")
 
 
     df_output.loc[i] = ["AGC AMATA",
-                      df_orders['inv'][i],
+                      "AGC"+"-"+df_orders['date'][i]+"-"+df_orders['no'][i],
                       "สินค้ากลุ่มยานยนต์/อะไหล่ยนต์",
                       "Product",
                       "1",
@@ -80,17 +84,17 @@ def view():
                       '1',
                       df_orders['origin'][i],
                       p_date,
-                      df_orders['pickup_time'][i],
-                      p_time,
+                      p_time_s,
+                      p_time_e,
                       df_orders['destination'][i],
                       df_orders['date'][i],
-                      df_orders['delivery_time'][i],
-                      d_time,
+                      d_time_s,
+                      d_time_e,
                       "",
                       "",
                       "",
                       "",
-                      "",
+                      "FALSE",
                       "",
                       ""]
   da = ('output') + de
@@ -107,4 +111,3 @@ def view():
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=80)
-

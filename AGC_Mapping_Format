@@ -1,0 +1,110 @@
+from flask import Flask, render_template, request, make_response, send_from_directory
+import pandas as pd
+from pandas.core.frame import DataFrame
+import numpy as np 
+import openpyxl
+from fileinput import filename
+import os
+import io
+import time
+from datetime import datetime, timedelta
+
+app = Flask('app')
+@app.route('/')
+def upload():
+   return render_template('upload-excel.html')
+        
+@app.route('/view' , methods = ['POST'])
+def view():
+  dd = datetime.now()
+  de = dd.strftime('%Y%m%d%H%M%S')+('.xlsx')
+  file = request.files['file'] 
+  file.filename = de
+  file.save(file.filename)
+
+  cols = ["no", "status", "trip", "date", "origin", "pickup_time", "pickup_actual", "destination", "delivery_time", "delivery_actual", "qty", "truck", "driver", "carrier","inv", "remark", "package_ctl", "package_emp", "charge", "droppoint", "goods_return", "toll_fee", "total_charge", "status_pickup"]
+
+  orders = pd.read_excel(file, skiprows=[0,1,2,3,4,5,6], names=cols, index_col=False) 
+  orders['no'] = orders['no'].astype(str)
+  orders['status'] = orders['status'].astype(str)
+  orders['date'] = orders['date'].astype(str)
+  orders['origin'] = orders['origin'].astype(str)
+  orders['pickup_time'] = orders['pickup_time'].astype(str)
+  orders['pickup_actual'] = orders['pickup_actual'].astype(str)
+  orders['destination'] = orders['destination'].astype(str)
+  orders['delivery_time'] = orders['delivery_time'].astype(str)
+  orders['delivery_actual'] = orders['delivery_actual'].astype(str)
+  orders['qty'] = orders['qty'].astype(str)
+  orders['truck'] = orders['truck'].astype(str)
+  orders['driver'] = orders['driver'].astype(str)
+  orders['carrier'] = orders['carrier'].astype(str)
+  orders['inv'] = orders['inv'].astype(str)
+  orders['remark'] = orders['remark'].astype(str)
+  orders['package_ctl'] = orders['package_ctl'].astype(str)
+  orders['package_emp'] = orders['package_emp'].astype(str)
+  orders['charge'] = orders['charge'].astype(str)
+  orders['droppoint'] = orders['droppoint'].astype(str)
+  orders['goods_return'] = orders['goods_return'].astype(str)
+  orders['toll_fee'] = orders['toll_fee'].astype(str)
+  orders['total_charge'] = orders['total_charge'].astype(str)
+  orders['status_pickup'] = orders['status_pickup'].astype(str)
+
+  df_orders = DataFrame(orders)
+
+  df_output = pd.DataFrame(columns=['รหัสลูกค้า','REF_No','กลุ่มสินค้า','รายละเอียดสินค้า', 'จำนวนหน่วยยกทั้งหมด', 'หน่วยยก', 'น้ำหนักทั้งหมด', 'หน่วย', 'ประเภทรถ', 'จำนวนคัน', 'รหัสต้นทาง', 'วันที่รับสินค้า', 'เวลาเริ่มรับสินค้า', 'เวลาสิ้นสุดรับสินค้า',
+  'รหัสปลายทาง', 'วันที่ส่งสินค้า', 'เวลาเริ่มส่งสินค้า', 'เวลาสิ้นสุดส่งสินค้า', 'ค่าขนส่งรับ', 'ค่าแรงงานรับ','ค่าขนส่งจ่าย', 'ค่าแรงงานจ่าย', 'เอกสารส่งกลับ', 'sequence', 'พ่วง'])
+
+  da = ('output') + de
+
+  for i in range(len(df_orders)):
+    if df_orders['status_pickup'][i] == 'N-1':
+      p_date = (datetime.strptime(df_orders['date'][i], '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
+    else:
+      p_date = df_orders['date'][i]
+
+    p_time = (datetime.strptime(df_orders['pickup_time'][i],'%H:%M:%S') + timedelta(minutes=30))
+    p_time = p_time.strftime('%H:%M:%S')
+    d_time = (datetime.strptime(df_orders['delivery_time'][i], '%H:%M:%S') + timedelta(minutes=30))
+    d_time = d_time.strftime('%H:%M:%S')
+
+
+    df_output.loc[i] = ["AGC AMATA",
+                      df_orders['inv'][i],
+                      "สินค้ากลุ่มยานยนต์/อะไหล่ยนต์",
+                      "Product",
+                      "1",
+                      "ไม่ระบุ",
+                      '10',
+                      "ตัน",
+                      "6 ล้อ ตู้ทึบ",
+                      '1',
+                      df_orders['origin'][i],
+                      p_date,
+                      df_orders['pickup_time'][i],
+                      p_time,
+                      df_orders['destination'][i],
+                      df_orders['date'][i],
+                      df_orders['delivery_time'][i],
+                      d_time,
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                      ""]
+  da = ('output') + de
+  # out = io.BytesIO()
+  with pd.ExcelWriter(da) as writer:
+    df_output.to_excel(writer, sheet_name='ImportData', startrow=1,index=False)
+     
+  # Return HTML snippet that will render the table
+  # return df_output.to_html()
+  pth = os.getcwd()
+  return send_from_directory(pth, da, as_attachment=True)
+  
+  #return send_from_directory(pth,da)
+
+if __name__ == '__main__':
+  app.run(host='0.0.0.0', port=80)
+
